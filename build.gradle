@@ -1,0 +1,20 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+ext {
+    junitVersion = '5.+'
+    mockitoVersion = '3.+'
+}
+
+dependencies {
+	testCompile group:'org.mockito', name: 'mockito-core', version:mockitoVersion 
+	testCompile group:'org.junit.jupiter', name:'junit-jupiter-api', version:junitVersion
+    testRuntime group:'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitVersion
+}
+
+test {
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter'
+    }
+}

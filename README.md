@@ -1,2 +1,2 @@
 # oc.expertcamp.tdd
-Code Samples for the tdd expert camp
+Code Samples for the `OC|ExpertCamp` TDD session
