@@ -7,8 +7,11 @@ import org.junit.jupiter.api.Test;
 
 class BowlingGameCalculatorTest {
 
+	private BowlingGameCalculator testDummy;
+
 	@BeforeEach
 	void setUp() throws Exception {
+		testDummy = new BowlingGameCalculator();
 	}
 
 	@Test
@@ -18,12 +21,13 @@ class BowlingGameCalculatorTest {
 		int expectedSore = 0;
 
 		// act
-		int score = new BowlingGameCalculator().validate(rollsAllMiss);
+		int score = testDummy.validate(rollsAllMiss);
 
 		// assert
 		assertEquals(expectedSore, score, String.format("result of worst game (%s)", rollsAllMiss));
 
 	}
+
 	@Test
 	void incpompleteFramesSumUpSingleRollResults() {
 		// arrange
@@ -31,7 +35,7 @@ class BowlingGameCalculatorTest {
 		int expectedSore = 90;
 
 		// act
-		int score = new BowlingGameCalculator().validate(incompleteFrames);
+		int score = testDummy.validate(incompleteFrames);
 
 		// assert
 		assertEquals(expectedSore, score, String.format("result of incomplete frames (%s)", incompleteFrames));
