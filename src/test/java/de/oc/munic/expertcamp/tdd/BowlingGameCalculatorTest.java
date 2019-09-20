@@ -41,4 +41,17 @@ class BowlingGameCalculatorTest {
 		assertEquals(expectedSore, score, String.format("result of incomplete frames (%s)", incompleteFrames));
 
 	}
+	@Test
+	void spareCountNextRollTwice() {
+		// arrange
+		String allSpares = "5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/5";
+		int expectedScore = 155;
+
+		// act
+		int score = testDummy.validate(allSpares);
+
+		// assert
+		assertEquals(expectedScore, score, String.format("result of all spares (%s)", allSpares));
+	}
+
 }
