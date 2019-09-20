@@ -64,25 +64,20 @@ public class BowlingGameCalculator {
 
 	public int validate(String rolls) {
 		int gameScore = INITIAL_SCORE;
-
-		FrameTypeScorer frameTypeScorer = new FrameTypeScorer(//
+		FrameTypeScorer[] typeScorers = {
+				new FrameTypeScorer(//
 				SINGLE_ROLL_PATTERN, //
 				(rollScore, matchPosition) -> rollScore.find(), //
 				(rollScore) -> Integer.parseInt(rollScore.group()), //
-				(rollScore) -> 0);
-		gameScore = frameTypeScorer.calculateFrameTypeScore(rolls);
-
-		frameTypeScorer = new FrameTypeScorer(SPARE_PATTERN, //
+				(rollScore) -> 0),new FrameTypeScorer(SPARE_PATTERN, //
 				(spareScore, matchPosition1) -> spareScore.find(matchPosition1),
 				(spareScore) -> Integer
 						.parseInt(Optional.ofNullable(spareScore.group(NEXT_ROLL_AFTER_PARE)).orElse(NO_POINTS))
 						+ (ALL_PINS_SCORE - Integer.parseInt(spareScore.group(FIRST_ROLL_IN_SPARE))),
 				(spareScore) -> FRAME_SEPARATOR.equals(spareScore.group(FRAME_SEPARATOR_MATCH))
 						? spareScore.start(FRAME_SEPARATOR_MATCH)
-						: spareScore.end());
-		gameScore += frameTypeScorer.calculateFrameTypeScore(rolls);
-
-		frameTypeScorer = new FrameTypeScorer(STRIKE_PATTERN, //
+						: spareScore.end()),
+	new FrameTypeScorer(STRIKE_PATTERN, //
 				(strikeScore, matchPosition2) -> strikeScore.find(matchPosition2), (strikeScore) -> {
 					String nextRoll = Optional.ofNullable(strikeScore.group(STRIKE_NEXT_ROLL)).orElse(NO_POINTS);
 					nextRoll = STRIKE_MARK.equals(nextRoll) ? String.valueOf(ALL_PINS_SCORE) : nextRoll;
@@ -98,8 +93,12 @@ public class BowlingGameCalculator {
 							: nextRoll;
 					return ALL_PINS_SCORE + Integer.parseInt(nextRoll) + Integer.parseInt(secondNextRoll);
 				}, (strikeScore) ->  NO_MATCH == strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH) ? strikeScore.end()
-					: strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH));
-		gameScore += frameTypeScorer.calculateFrameTypeScore(rolls);
+					: strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH))	};
+		
+
+		for (FrameTypeScorer frameTypeScorer : typeScorers) {
+			gameScore += frameTypeScorer.calculateFrameTypeScore(rolls);
+		}
 
 		return gameScore;
 	}
