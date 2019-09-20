@@ -24,6 +24,36 @@ public class BowlingGameCalculator {
 	private static final Pattern SINGLE_ROLL_PATTERN = Pattern.compile("(\\d)");
 	private static final Pattern SPARE_PATTERN = Pattern.compile("(\\d)/( )?(\\d)?");
 	private static final Pattern STRIKE_PATTERN = Pattern.compile("X( )?(\\d|[X-])?(\\d|[/X-])?");
+	private final FrameTypeScorer[] typeScorers = { new FrameTypeScorer(//
+			SINGLE_ROLL_PATTERN, //
+			(rollScore, matchPosition) -> rollScore.find(), //
+			(rollScore) -> Integer.parseInt(rollScore.group()), //
+			(rollScore) -> 0),
+			new FrameTypeScorer(SPARE_PATTERN, //
+					(spareScore, matchPosition1) -> spareScore.find(matchPosition1),
+					(spareScore) -> Integer
+							.parseInt(Optional.ofNullable(spareScore.group(NEXT_ROLL_AFTER_PARE)).orElse(NO_POINTS))
+							+ (ALL_PINS_SCORE - Integer.parseInt(spareScore.group(FIRST_ROLL_IN_SPARE))),
+					(spareScore) -> FRAME_SEPARATOR.equals(spareScore.group(FRAME_SEPARATOR_MATCH))
+							? spareScore.start(FRAME_SEPARATOR_MATCH)
+							: spareScore.end()),
+			new FrameTypeScorer(STRIKE_PATTERN, //
+					(strikeScore, matchPosition2) -> strikeScore.find(matchPosition2), (strikeScore) -> {
+						String nextRoll = Optional.ofNullable(strikeScore.group(STRIKE_NEXT_ROLL)).orElse(NO_POINTS);
+						nextRoll = STRIKE_MARK.equals(nextRoll) ? String.valueOf(ALL_PINS_SCORE) : nextRoll;
+						nextRoll = MISS_MARK.equals(nextRoll) ? NO_POINTS : nextRoll;
+
+						String secondNextRoll = Optional.ofNullable(strikeScore.group(STRIKE_SECOND_NEXT_ROLL))
+								.orElse(NO_POINTS);
+						secondNextRoll = STRIKE_MARK.equals(secondNextRoll) ? String.valueOf(ALL_PINS_SCORE)
+								: secondNextRoll;
+						secondNextRoll = MISS_MARK.equals(secondNextRoll) ? NO_POINTS : secondNextRoll;
+						secondNextRoll = SPARE_MARK.equals(secondNextRoll)
+								? String.valueOf(ALL_PINS_SCORE - Integer.parseInt(nextRoll))
+								: nextRoll;
+						return ALL_PINS_SCORE + Integer.parseInt(nextRoll) + Integer.parseInt(secondNextRoll);
+					}, (strikeScore) -> NO_MATCH == strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH) ? strikeScore.end()
+							: strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH)) };
 
 	static class FrameTypeScorer {
 		private final BiFunction<Matcher, Integer, Boolean> frameScoreMatch;
@@ -64,38 +94,6 @@ public class BowlingGameCalculator {
 
 	public int validate(String rolls) {
 		int gameScore = INITIAL_SCORE;
-		FrameTypeScorer[] typeScorers = {
-				new FrameTypeScorer(//
-				SINGLE_ROLL_PATTERN, //
-				(rollScore, matchPosition) -> rollScore.find(), //
-				(rollScore) -> Integer.parseInt(rollScore.group()), //
-				(rollScore) -> 0),new FrameTypeScorer(SPARE_PATTERN, //
-				(spareScore, matchPosition1) -> spareScore.find(matchPosition1),
-				(spareScore) -> Integer
-						.parseInt(Optional.ofNullable(spareScore.group(NEXT_ROLL_AFTER_PARE)).orElse(NO_POINTS))
-						+ (ALL_PINS_SCORE - Integer.parseInt(spareScore.group(FIRST_ROLL_IN_SPARE))),
-				(spareScore) -> FRAME_SEPARATOR.equals(spareScore.group(FRAME_SEPARATOR_MATCH))
-						? spareScore.start(FRAME_SEPARATOR_MATCH)
-						: spareScore.end()),
-	new FrameTypeScorer(STRIKE_PATTERN, //
-				(strikeScore, matchPosition2) -> strikeScore.find(matchPosition2), (strikeScore) -> {
-					String nextRoll = Optional.ofNullable(strikeScore.group(STRIKE_NEXT_ROLL)).orElse(NO_POINTS);
-					nextRoll = STRIKE_MARK.equals(nextRoll) ? String.valueOf(ALL_PINS_SCORE) : nextRoll;
-					nextRoll = MISS_MARK.equals(nextRoll) ? NO_POINTS : nextRoll;
-
-					String secondNextRoll = Optional.ofNullable(strikeScore.group(STRIKE_SECOND_NEXT_ROLL))
-							.orElse(NO_POINTS);
-					secondNextRoll = STRIKE_MARK.equals(secondNextRoll) ? String.valueOf(ALL_PINS_SCORE)
-							: secondNextRoll;
-					secondNextRoll = MISS_MARK.equals(secondNextRoll) ? NO_POINTS : secondNextRoll;
-					secondNextRoll = SPARE_MARK.equals(secondNextRoll)
-							? String.valueOf(ALL_PINS_SCORE - Integer.parseInt(nextRoll))
-							: nextRoll;
-					return ALL_PINS_SCORE + Integer.parseInt(nextRoll) + Integer.parseInt(secondNextRoll);
-				}, (strikeScore) ->  NO_MATCH == strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH) ? strikeScore.end()
-					: strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH))	};
-		
-
 		for (FrameTypeScorer frameTypeScorer : typeScorers) {
 			gameScore += frameTypeScorer.calculateFrameTypeScore(rolls);
 		}
