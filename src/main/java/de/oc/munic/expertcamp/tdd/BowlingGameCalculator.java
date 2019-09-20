@@ -14,8 +14,8 @@ public class BowlingGameCalculator {
 	private static final String NO_POINTS = "0";
 	private static final Pattern SINGLE_ROLL_PATTERN = Pattern.compile("(\\d)");
 	private static final Pattern SPARE_PATTERN = Pattern.compile("(\\d)/( )?(\\d)?");
+	private static final Pattern STRIKE_PATTERN = Pattern.compile("X( )?(\\d|[X-])?(\\d|[/X-])?");
 
-	
 	public int validate(String rolls) {
 		Matcher rollScore = SINGLE_ROLL_PATTERN.matcher(rolls);
 		int gameScore = INITIAL_SCORE;
@@ -32,6 +32,22 @@ public class BowlingGameCalculator {
 					: spareScore.end();
 		}
 
+		Matcher strikeScore = STRIKE_PATTERN.matcher(rolls);
+		restartPos = 0;
+		while (strikeScore.find(restartPos)) {
+			String nextRoll = Optional.ofNullable(strikeScore.group(2)).orElse("0");
+			nextRoll = "X".equals(nextRoll) ? "10" : nextRoll;
+			nextRoll = "-".equals(nextRoll) ? "0" : nextRoll;
+
+			String secondNextRoll = Optional.ofNullable(strikeScore.group(3)).orElse("0");
+			secondNextRoll = "X".equals(secondNextRoll) ? "10" : secondNextRoll;
+			secondNextRoll = "-".equals(secondNextRoll) ? "0" : secondNextRoll;
+			secondNextRoll = "/".equals(secondNextRoll) ? String.valueOf(10 - Integer.parseInt(nextRoll)) : nextRoll;
+
+			gameScore += 10 + Integer.parseInt(nextRoll) + Integer.parseInt(secondNextRoll);
+
+			restartPos = -1 == strikeScore.start(1) ? strikeScore.end() : strikeScore.start(1);
+		}
 		return gameScore;
 	}
 
