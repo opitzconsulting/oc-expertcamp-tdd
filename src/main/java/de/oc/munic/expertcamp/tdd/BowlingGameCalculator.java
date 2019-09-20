@@ -1,6 +1,8 @@
 package de.oc.munic.expertcamp.tdd;
 
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +24,43 @@ public class BowlingGameCalculator {
 	private static final Pattern SINGLE_ROLL_PATTERN = Pattern.compile("(\\d)");
 	private static final Pattern SPARE_PATTERN = Pattern.compile("(\\d)/( )?(\\d)?");
 	private static final Pattern STRIKE_PATTERN = Pattern.compile("X( )?(\\d|[X-])?(\\d|[/X-])?");
+
+	static class FrameTypeScorer {
+		private final BiFunction<Matcher, Integer, Boolean> frameScoreMatch;
+		private final Function<Matcher, Integer> frameScoreCalculator;
+		private final Function<Matcher, Integer> frameScoreReseter;
+		private int matcherPosition = 0;
+		private Matcher frameTypeMatcher;
+		private Pattern frameTypePattern;
+
+		public FrameTypeScorer(Pattern frameTypePattern, BiFunction<Matcher, Integer, Boolean> frameScoreMatch,
+				Function<Matcher, Integer> frameScoreCalculator, Function<Matcher, Integer> frameScoreReseter) {
+			super();
+			this.frameTypePattern = frameTypePattern;
+			this.frameScoreMatch = frameScoreMatch;
+			this.frameScoreCalculator = frameScoreCalculator;
+			this.frameScoreReseter = frameScoreReseter;
+		}
+
+		boolean hasNext() {
+			return frameScoreMatch.apply(frameTypeMatcher, matcherPosition);
+		}
+
+		int calculateScore() {
+			Integer score = frameScoreCalculator.apply(frameTypeMatcher);
+			matcherPosition = frameScoreReseter.apply(frameTypeMatcher);
+			return score;
+		}
+
+		int calculateFrameTypeScore(String rolls) {
+			frameTypeMatcher = frameTypePattern.matcher(rolls);
+			int gameScore = 0;
+			while (hasNext()) {
+				gameScore += calculateScore();
+			}
+			return gameScore;
+		}
+	}
 
 	public int validate(String rolls) {
 		Matcher rollScore = SINGLE_ROLL_PATTERN.matcher(rolls);
@@ -49,11 +88,14 @@ public class BowlingGameCalculator {
 			String secondNextRoll = Optional.ofNullable(strikeScore.group(STRIKE_SECOND_NEXT_ROLL)).orElse(NO_POINTS);
 			secondNextRoll = STRIKE_MARK.equals(secondNextRoll) ? String.valueOf(ALL_PINS_SCORE) : secondNextRoll;
 			secondNextRoll = MISS_MARK.equals(secondNextRoll) ? NO_POINTS : secondNextRoll;
-			secondNextRoll = SPARE_MARK.equals(secondNextRoll) ? String.valueOf(ALL_PINS_SCORE - Integer.parseInt(nextRoll)) : nextRoll;
+			secondNextRoll = SPARE_MARK.equals(secondNextRoll)
+					? String.valueOf(ALL_PINS_SCORE - Integer.parseInt(nextRoll))
+					: nextRoll;
 
 			gameScore += ALL_PINS_SCORE + Integer.parseInt(nextRoll) + Integer.parseInt(secondNextRoll);
 
-			restartPos = NO_MATCH == strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH) ? strikeScore.end() : strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH);
+			restartPos = NO_MATCH == strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH) ? strikeScore.end()
+					: strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH);
 		}
 		return gameScore;
 	}
