@@ -12,11 +12,15 @@ class BowlingGameCalculatorTest {
 	}
 
 	@Test
-	void test() {
+	void worstGameHasNoPoints() {
 		// arrange
+		String rollsAllMiss = "-- -- -- -- -- -- -- -- -- --";
+
 		// act
+		int score = new BowlingGameCalculator().validate(rollsAllMiss);
+
 		// assert
-		fail("Not yet implemented");
+		
 	}
 
 }
