@@ -63,11 +63,15 @@ public class BowlingGameCalculator {
 	}
 
 	public int validate(String rolls) {
-		Matcher rollScore = SINGLE_ROLL_PATTERN.matcher(rolls);
 		int gameScore = INITIAL_SCORE;
-		while (rollScore.find()) {
-			gameScore += Integer.parseInt(rollScore.group());
-		}
+
+		FrameTypeScorer frameTypeScorer = new FrameTypeScorer(//
+				SINGLE_ROLL_PATTERN, //
+				(rollScore, matchPosition) -> rollScore.find(), // 
+				(rollScore) -> Integer.parseInt(rollScore.group()), //
+				(rollScore) -> 0);
+		gameScore = frameTypeScorer.calculateFrameTypeScore(rolls);
+
 		Matcher spareScore = SPARE_PATTERN.matcher(rolls);
 		int restartPos = 0;
 		while (spareScore.find(restartPos)) {
