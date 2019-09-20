@@ -13,6 +13,9 @@ class BowlingGameCalculatorTest {
 
 	@Test
 	void test() {
+		// arrange
+		// act
+		// assert
 		fail("Not yet implemented");
 	}
 
