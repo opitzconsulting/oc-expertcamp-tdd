@@ -5,7 +5,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BowlingGameCalculator {
+	private static final int STRIKE_SECOND_NEXT_ROLL = 3;
+	private static final int STRIKE_NEXT_ROLL = 2;
+	private static final int NO_MATCH = -1;
+	private static final int STRIKE_FRAME_SEPARATOR_MATCH = 1;
+	private static final String SPARE_MARK = "/";
 	private static final String FRAME_SEPARATOR = " ";
+	private static final String STRIKE_MARK = "X";
+	private static final String MISS_MARK = "-";
 	private static final int FRAME_SEPARATOR_MATCH = 2;
 	private static final int NEXT_ROLL_AFTER_PARE = 3;
 	private static final int FIRST_ROLL_IN_SPARE = 1;
@@ -35,18 +42,18 @@ public class BowlingGameCalculator {
 		Matcher strikeScore = STRIKE_PATTERN.matcher(rolls);
 		restartPos = 0;
 		while (strikeScore.find(restartPos)) {
-			String nextRoll = Optional.ofNullable(strikeScore.group(2)).orElse("0");
-			nextRoll = "X".equals(nextRoll) ? "10" : nextRoll;
-			nextRoll = "-".equals(nextRoll) ? "0" : nextRoll;
+			String nextRoll = Optional.ofNullable(strikeScore.group(STRIKE_NEXT_ROLL)).orElse(NO_POINTS);
+			nextRoll = STRIKE_MARK.equals(nextRoll) ? String.valueOf(ALL_PINS_SCORE) : nextRoll;
+			nextRoll = MISS_MARK.equals(nextRoll) ? NO_POINTS : nextRoll;
 
-			String secondNextRoll = Optional.ofNullable(strikeScore.group(3)).orElse("0");
-			secondNextRoll = "X".equals(secondNextRoll) ? "10" : secondNextRoll;
-			secondNextRoll = "-".equals(secondNextRoll) ? "0" : secondNextRoll;
-			secondNextRoll = "/".equals(secondNextRoll) ? String.valueOf(10 - Integer.parseInt(nextRoll)) : nextRoll;
+			String secondNextRoll = Optional.ofNullable(strikeScore.group(STRIKE_SECOND_NEXT_ROLL)).orElse(NO_POINTS);
+			secondNextRoll = STRIKE_MARK.equals(secondNextRoll) ? String.valueOf(ALL_PINS_SCORE) : secondNextRoll;
+			secondNextRoll = MISS_MARK.equals(secondNextRoll) ? NO_POINTS : secondNextRoll;
+			secondNextRoll = SPARE_MARK.equals(secondNextRoll) ? String.valueOf(ALL_PINS_SCORE - Integer.parseInt(nextRoll)) : nextRoll;
 
-			gameScore += 10 + Integer.parseInt(nextRoll) + Integer.parseInt(secondNextRoll);
+			gameScore += ALL_PINS_SCORE + Integer.parseInt(nextRoll) + Integer.parseInt(secondNextRoll);
 
-			restartPos = -1 == strikeScore.start(1) ? strikeScore.end() : strikeScore.start(1);
+			restartPos = NO_MATCH == strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH) ? strikeScore.end() : strikeScore.start(STRIKE_FRAME_SEPARATOR_MATCH);
 		}
 		return gameScore;
 	}
