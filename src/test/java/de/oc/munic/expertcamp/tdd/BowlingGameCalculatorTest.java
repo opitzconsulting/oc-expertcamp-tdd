@@ -15,12 +15,14 @@ class BowlingGameCalculatorTest {
 	void worstGameHasNoPoints() {
 		// arrange
 		String rollsAllMiss = "-- -- -- -- -- -- -- -- -- --";
+		int expectedSore = 0;
 
 		// act
 		int score = new BowlingGameCalculator().validate(rollsAllMiss);
 
 		// assert
-		
+		assertEquals(expectedSore, score, String.format("result of worst game (%s)", rollsAllMiss));
+
 	}
 
 }
