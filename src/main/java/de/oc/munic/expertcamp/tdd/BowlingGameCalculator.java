@@ -67,23 +67,23 @@ public class BowlingGameCalculator {
 
 		FrameTypeScorer frameTypeScorer = new FrameTypeScorer(//
 				SINGLE_ROLL_PATTERN, //
-				(rollScore, matchPosition) -> rollScore.find(), // 
+				(rollScore, matchPosition) -> rollScore.find(), //
 				(rollScore) -> Integer.parseInt(rollScore.group()), //
 				(rollScore) -> 0);
 		gameScore = frameTypeScorer.calculateFrameTypeScore(rolls);
 
-		Matcher spareScore = SPARE_PATTERN.matcher(rolls);
-		int restartPos = 0;
-		while (spareScore.find(restartPos)) {
-			gameScore += Integer.parseInt(Optional.ofNullable(spareScore.group(NEXT_ROLL_AFTER_PARE)).orElse(NO_POINTS))
-					+ (ALL_PINS_SCORE - Integer.parseInt(spareScore.group(FIRST_ROLL_IN_SPARE)));
-			restartPos = FRAME_SEPARATOR.equals(spareScore.group(FRAME_SEPARATOR_MATCH))
-					? spareScore.start(FRAME_SEPARATOR_MATCH)
-					: spareScore.end();
-		}
+		frameTypeScorer = new FrameTypeScorer(SPARE_PATTERN, //
+				(spareScore, matchPosition1) -> spareScore.find(matchPosition1),
+				(spareScore) -> Integer
+						.parseInt(Optional.ofNullable(spareScore.group(NEXT_ROLL_AFTER_PARE)).orElse(NO_POINTS))
+						+ (ALL_PINS_SCORE - Integer.parseInt(spareScore.group(FIRST_ROLL_IN_SPARE))),
+				(spareScore) -> FRAME_SEPARATOR.equals(spareScore.group(FRAME_SEPARATOR_MATCH))
+						? spareScore.start(FRAME_SEPARATOR_MATCH)
+						: spareScore.end());
+		gameScore += frameTypeScorer.calculateFrameTypeScore(rolls);
 
 		Matcher strikeScore = STRIKE_PATTERN.matcher(rolls);
-		restartPos = 0;
+		int restartPos = 0;
 		while (strikeScore.find(restartPos)) {
 			String nextRoll = Optional.ofNullable(strikeScore.group(STRIKE_NEXT_ROLL)).orElse(NO_POINTS);
 			nextRoll = STRIKE_MARK.equals(nextRoll) ? String.valueOf(ALL_PINS_SCORE) : nextRoll;
