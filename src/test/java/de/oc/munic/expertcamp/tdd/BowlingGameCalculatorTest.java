@@ -24,5 +24,17 @@ class BowlingGameCalculatorTest {
 		assertEquals(expectedSore, score, String.format("result of worst game (%s)", rollsAllMiss));
 
 	}
+	@Test
+	void incpompleteFramesSumUpSingleRollResults() {
+		// arrange
+		String incompleteFrames = "9- 9- 9- 9- 9- 9- 9- 9- 9- 9-";
+		int expectedSore = 90;
 
+		// act
+		int score = new BowlingGameCalculator().validate(incompleteFrames);
+
+		// assert
+		assertEquals(expectedSore, score, String.format("result of incomplete frames (%s)", incompleteFrames));
+
+	}
 }
